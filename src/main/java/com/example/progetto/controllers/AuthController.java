@@ -8,7 +8,9 @@ import com.example.progetto.requests.LoginRequest;
 import com.example.progetto.requests.UtenteRequest;
 import com.example.progetto.security.JwtTools;
 import com.example.progetto.services.UtenteService;
+import io.jsonwebtoken.security.Password;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,8 @@ public class AuthController {
     private UtenteService utenteService;
     @Autowired
     private JwtTools jwtTools;
+    @Autowired
+    private PasswordEncoder encoder;
 
     @PostMapping("/auth/register")
     public Utente register(@RequestBody @Validated UtenteRequest utenteRequest, BindingResult bindingResult) {
@@ -40,7 +44,7 @@ public class AuthController {
 
         Utente utente = utenteService.getUtenteByUsername(loginRequest.getUsername());
 
-        if (utente.getPassword().equals(loginRequest.getPassword())) {
+        if (encoder.matches(loginRequest.getPassword(),utente.getPassword())) {
             return jwtTools.createToken(utente);
         } else {
             throw new LoginFaultException("username/password errate");
